@@ -35,6 +35,19 @@ const resolvers = {
             const token = signToken(user);
 
             return { token, user };
+        },
+        saveBook: async (parent, { book }, context) => {
+            if (context.user) {
+                return User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { $addToSet: { savedBooks: book } },
+                    {
+                        new: true,
+                        runValidators: true,
+                    }
+                );
+            }
+            throw new AuthenticationError('Could not save this book');
         }
     }
 }
