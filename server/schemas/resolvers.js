@@ -13,12 +13,13 @@ const resolvers = {
         },
     },
     Mutation: {
-        // Add a user
+        // Add a user and create a token
         addUser: async (parent, { username, email, password }) => {
            const user = await User.create({ username, email, password });
            const token = signToken(user);
            return { token, user }; 
         },
+        // Log in a user and create a token
         login: async (parent, { email, password }) => {
             const user = await User.findOne({ email });
 
@@ -36,6 +37,7 @@ const resolvers = {
 
             return { token, user };
         },
+        // Save a book to a user's savedBooks array
         saveBook: async (parent, { book }, context) => {
             if (context.user) {
                 return User.findOneAndUpdate(
@@ -48,6 +50,25 @@ const resolvers = {
                 );
             }
             throw new AuthenticationError('Could not save this book');
-        }
-    }
-}
+        },
+        // Remove a book from a user's savedBooks array
+        removeBook: async (parent, { bookId }, context) => {
+            if (context.user) {
+                return User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { 
+                        $pull: {
+                            savedBooks: {
+                                bookId: bookId,
+                            },
+                        },
+                    },
+                    { new: true }
+                );
+            }
+            throw new AuthenticationError('Could not remove this book');
+        },
+    },
+};
+
+module.exports = resolvers;
